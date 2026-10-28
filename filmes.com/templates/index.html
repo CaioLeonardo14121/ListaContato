@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo de Filmes</title>
+    <style>
+      :root {
+        --primaria: #7c3aed;
+        --primaria-escura: #5b21b6;
+        --secundaria: #f59e0b;
+        --fundo: #f5f3ff;
+        --fundo-card: #ffffff;
+        --texto: #1f2937;
+        --texto-suave: #6b7280;
+        --sucesso: #10b981;
+        --erro: #ef4444;
+        --linha: #e9d5ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+        color: var(--texto);
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2.2rem;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 12px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--primaria);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: var(--primaria-escura);
+      }
+
+      .btn-danger {
+        background: var(--erro);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #a12d2d;
+      }
+
+      .btn-secondary {
+        background: #ede9fe;
+        color: var(--primaria-escura);
+        text-decoration: none;
+      }
+
+      .mensagens {
+        margin: 16px 0;
+      }
+
+      .mensagem {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      .mensagem.sucesso {
+        background: #eafaf1;
+        color: var(--sucesso);
+        border: 1px solid #b9e5cc;
+      }
+
+      .mensagem.erro {
+        background: #fdecec;
+        color: var(--erro);
+        border: 1px solid #f3b8ba;
+      }
+
+      .card {
+        background: var(--fundo-card);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 25px rgba(91, 33, 182, 0.12);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e7ebf3;
+      }
+
+      th {
+        background: #f3e8ff;
+        color: var(--texto);
+      }
+
+      tbody tr:hover {
+        background: #faf5ff;
+      }
+
+      .nota {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #fef3c7;
+        color: #92400e;
+        font-weight: bold;
+      }
+
+      .acoes {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .acoes form {
+        margin: 0;
+      }
+
+      .empty {
+        text-align: center;
+        color: var(--texto-suave);
+        padding: 30px 20px;
+        background: #faf5ff;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎬 Catálogo de Filmes</h1>
+        <a class="btn btn-primary" href="{{ url_for('novo_filme') }}">+ Novo filme</a>
+      </div>
+
+      <div class="mensagens">
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+          {% if mensagens %}
+            {% for categoria, mensagem in mensagens %}
+              <div class="mensagem {{ categoria }}">{{ mensagem }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <div class="card">
+        {% if filmes %}
+          <table>
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Gênero</th>
+                <th>Ano</th>
+                <th>Nota</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for filme in filmes %}
+                <tr>
+                  <td>{{ filme.titulo }}</td>
+                  <td>{{ filme.genero }}</td>
+                  <td>{{ filme.ano }}</td>
+                  <td><span class="nota">{{ filme.nota }}</span></td>
+                  <td>
+                    <div class="acoes">
+                      <a class="btn btn-secondary" href="{{ url_for('editar_filme', id=filme.id) }}">Editar</a>
+                      <form action="{{ url_for('excluir_filme', id=filme.id) }}" method="post">
+                        <button class="btn btn-danger" type="submit" onclick="return confirm('Deseja excluir este filme?')">Excluir</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty">
+            Nenhum filme cadastrado ainda. Clique em “+ Novo filme” para adicionar o primeiro título.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>
