@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caixa de entrada | Caio Leonardo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="pagina-interna">
+    <header class="cabecalho">
+        <div class="container navegacao">
+            <a href="{{ url_for('index') }}" class="logo">CL<span>.</span></a>
+            <nav class="nav-interna">
+                <a href="{{ url_for('caixa_entrada') }}">Caixa de entrada</a>
+                <a href="{{ url_for('logout') }}">Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container caixa">
+        <div class="cabecalho-caixa">
+            <div>
+                <p class="destaque">MENSAGENS RECEBIDAS</p>
+                <h1>Caixa de <span>entrada</span></h1>
+                <p>Total de mensagens: {{ mensagens|length }}</p>
+            </div>
+            <a class="botao botao-secundario" href="{{ url_for('index') }}">
+                Ver portfólio
+            </a>
+        </div>
+
+        {% if mensagens %}
+            <div class="lista-mensagens">
+                {% for m in mensagens %}
+                    <article class="mensagem-card">
+                        <div class="mensagem-topo">
+                            <div>
+                                <h2>{{ m['nome'] }}</h2>
+                                <a href="mailto:{{ m['email'] }}">{{ m['email'] }}</a>
+                            </div>
+                            <time>{{ m['data'] }}</time>
+                        </div>
+
+                        <div class="corpo-mensagem">{{ m['mensagem'] }}</div>
+
+                        <form class="form-excluir"
+                              method="POST"
+                              action="{{ url_for('excluir_mensagem', mensagem_id=m['id']) }}"
+                              onsubmit="return confirm('Deseja excluir esta mensagem?')">
+                            <button class="botao-excluir" type="submit">
+                                Excluir mensagem
+                            </button>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="vazio">
+                <h2>Nenhuma mensagem recebida</h2>
+                <p>Quando alguém preencher o formulário, a mensagem aparecerá aqui.</p>
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html>

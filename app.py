@@ -1,131 +1,134 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-import sqlite3
 import os
+import sqlite3
+from datetime import datetime
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = 'agenda-contatos-secret'
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "troque-esta-chave-secreta-antes-de-publicar"
+)
 
-DB_PATH = 'agenda.db'
-
-
-def get_db():
-    """Abre conexão com o banco de dados."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # resultados como dicionário
-    return conn
+PASTA = os.path.abspath(os.path.dirname(__file__))
+BANCO = os.path.join(PASTA, "mensagens.db")
+SENHA_ADMIN = os.environ.get("ADMIN_PASSWORD", "Caio123!")
 
 
-def init_db():
-    """Cria a tabela de contatos se ainda não existir."""
-    with get_db() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS contatos (
-                id      INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome    TEXT    NOT NULL,
-                email   TEXT,
-                telefone TEXT,
-                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+def conectar_banco():
+    conexao = sqlite3.connect(BANCO)
+    conexao.row_factory = sqlite3.Row
+    return conexao
+
+
+def criar_banco():
+    with conectar_banco() as conexao:
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS mensagens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT NOT NULL,
+                mensagem TEXT NOT NULL,
+                data TEXT NOT NULL
             )
-        ''')
-        conn.commit()
+        """)
 
 
-# ── Rotas ──────────────────────────────────────────────────────
+def exige_login(funcao):
+    @wraps(funcao)
+    def verificar_login(*args, **kwargs):
+        if not session.get("administrador_logado"):
+            return redirect(url_for("login"))
+        return funcao(*args, **kwargs)
+    return verificar_login
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    """Lista todos os contatos."""
-    busca = request.args.get('busca', '').strip()
-    with get_db() as conn:
-        if busca:
-            contatos = conn.execute(
-                "SELECT * FROM contatos WHERE nome LIKE ? ORDER BY nome",
-                (f'%{busca}%',)
-            ).fetchall()
-        else:
-            contatos = conn.execute(
-                "SELECT * FROM contatos ORDER BY nome"
-            ).fetchall()
-    return render_template('index.html', contatos=contatos, busca=busca)
+    return render_template("index.html")
 
 
-@app.route('/novo', methods=['GET', 'POST'])
-def novo():
-    """Exibe formulário e salva novo contato."""
-    if request.method == 'POST':
-        nome     = request.form['nome'].strip()
-        email    = request.form.get('email', '').strip()
-        telefone = request.form.get('telefone', '').strip()
+@app.route("/enviar-mensagem", methods=["POST"])
+def enviar_mensagem():
+    nome = request.form.get("nome", "").strip()
+    email = request.form.get("email", "").strip()
+    mensagem = request.form.get("mensagem", "").strip()
+    consentimento = request.form.get("consentimento")
 
-        if not nome:
-            flash('O nome é obrigatório.', 'erro')
-            return render_template('form.html', contato=None)
+    if not consentimento:
+        flash("Marque a opção de consentimento.")
+    elif len(nome) < 2 or len(nome) > 100:
+        flash("Digite um nome válido.")
+    elif (
+        len(email) > 254
+        or "@" not in email
+        or "." not in email.rsplit("@", 1)[-1]
+    ):
+        flash("Digite um e-mail válido.")
+    elif len(mensagem) < 10 or len(mensagem) > 5000:
+        flash("A mensagem deve ter entre 10 e 5000 caracteres.")
+    else:
+        data = datetime.now().strftime("%d/%m/%Y às %H:%M")
 
-        with get_db() as conn:
-            conn.execute(
-                "INSERT INTO contatos (nome, email, telefone) VALUES (?, ?, ?)",
-                (nome, email, telefone)
+        with conectar_banco() as conexao:
+            conexao.execute(
+                """INSERT INTO mensagens
+                (nome, email, mensagem, data)
+                VALUES (?, ?, ?, ?)""",
+                (nome, email, mensagem, data)
             )
-            conn.commit()
 
-        flash(f'Contato "{nome}" adicionado com sucesso!', 'ok')
-        return redirect(url_for('index'))
+        flash("Mensagem enviada com sucesso!")
 
-    return render_template('form.html', contato=None)
+    return redirect(url_for("index") + "#contato")
 
 
-@app.route('/editar/<int:id>', methods=['GET', 'POST'])
-def editar(id):
-    """Exibe formulário preenchido e salva edição."""
-    with get_db() as conn:
-        contato = conn.execute(
-            "SELECT * FROM contatos WHERE id = ?", (id,)
-        ).fetchone()
+@app.route("/caixa-de-correio", methods=["GET", "POST"])
+def login():
+    erro = None
 
-    if contato is None:
-        flash('Contato não encontrado.', 'erro')
-        return redirect(url_for('index'))
+    if request.method == "POST":
+        senha = request.form.get("senha", "")
 
-    if request.method == 'POST':
-        nome     = request.form['nome'].strip()
-        email    = request.form.get('email', '').strip()
-        telefone = request.form.get('telefone', '').strip()
+        if senha and senha == SENHA_ADMIN:
+            session["administrador_logado"] = True
+            return redirect(url_for("caixa_entrada"))
 
-        if not nome:
-            flash('O nome é obrigatório.', 'erro')
-            return render_template('form.html', contato=contato)
+        erro = "Senha incorreta. Tente novamente."
 
-        with get_db() as conn:
-            conn.execute(
-                "UPDATE contatos SET nome=?, email=?, telefone=? WHERE id=?",
-                (nome, email, telefone, id)
-            )
-            conn.commit()
-
-        flash(f'Contato "{nome}" atualizado!', 'ok')
-        return redirect(url_for('index'))
-
-    return render_template('form.html', contato=contato)
+    return render_template("login.html", erro=erro)
 
 
-@app.route('/deletar/<int:id>', methods=['POST'])
-def deletar(id):
-    """Remove um contato."""
-    with get_db() as conn:
-        contato = conn.execute(
-            "SELECT nome FROM contatos WHERE id = ?", (id,)
-        ).fetchone()
-        if contato:
-            conn.execute("DELETE FROM contatos WHERE id = ?", (id,))
-            conn.commit()
-            flash(f'Contato "{contato["nome"]}" removido.', 'ok')
-        else:
-            flash('Contato não encontrado.', 'erro')
-    return redirect(url_for('index'))
+@app.route("/caixa-de-entrada")
+@exige_login
+def caixa_entrada():
+    with conectar_banco() as conexao:
+        mensagens = conexao.execute(
+            "SELECT * FROM mensagens ORDER BY id DESC"
+        ).fetchall()
+
+    return render_template("inbox.html", mensagens=mensagens)
 
 
-# ── Inicialização ──────────────────────────────────────────────
+@app.route("/excluir-mensagem/<int:mensagem_id>", methods=["POST"])
+@exige_login
+def excluir_mensagem(mensagem_id):
+    with conectar_banco() as conexao:
+        conexao.execute(
+            "DELETE FROM mensagens WHERE id = ?",
+            (mensagem_id,)
+        )
 
-if __name__ == '__main__':
-    init_db()
+    return redirect(url_for("caixa_entrada"))
+
+
+@app.route("/sair")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+
+criar_banco()
+
+if __name__ == "__main__":
     app.run(debug=True)

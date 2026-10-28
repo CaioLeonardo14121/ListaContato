@@ -1,57 +1,192 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caio Leonardo | Portfólio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+<header class="cabecalho">
+    <div class="container navegacao">
+        <a href="#inicio" class="logo">CL<span>.</span></a>
+        <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menu">☰</button>
 
-{% block title %}Contatos · Agenda{% endblock %}
+        <nav id="menu">
+            <a href="#inicio">Início</a>
+            <a href="#sobre">Sobre mim</a>
+            <a href="#habilidades">Habilidades</a>
+            <a href="#projetos">Projetos</a>
+            <a href="#contato">Contato</a>
+            <a href="{{ url_for('login') }}">Caixa de correio</a>
+        </nav>
 
-{% block content %}
+        <button id="tema" class="botao-tema" aria-label="Alternar tema">☼</button>
+    </div>
+</header>
 
-<section class="topo-lista">
-  <h2>Contatos <span class="badge">{{ contatos | length }}</span></h2>
+<main>
+    <section id="inicio" class="inicio">
+        <div class="container inicio-conteudo">
+            <div>
+                <p class="destaque">DESENVOLVEDOR EM FORMAÇÃO</p>
+                <p id="saudacao">Olá! Seja bem-vindo(a).</p>
+                <h1>Oi, eu sou <span>Caio Leonardo</span>.</h1>
+                <h2>Transformando ideias em soluções digitais.</h2>
 
-  <form class="busca" method="GET" action="{{ url_for('index') }}">
-    <input type="text" name="busca" placeholder="Buscar por nome…" value="{{ busca }}">
-    <button type="submit">🔍</button>
-    {% if busca %}
-      <a href="{{ url_for('index') }}" class="btn-limpar">✕ Limpar</a>
-    {% endif %}
-  </form>
-</section>
+                <p class="descricao">
+                    Sou aluno do 2º ano do ensino médio e faço curso de
+                    Tecnologia da Informação no Senac. Estou aprendendo
+                    programação, criação de sites e bancos de dados.
+                </p>
 
-{% if contatos %}
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>E-mail</th>
-        <th>Telefone</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in contatos %}
-      <tr>
-        <td><strong>{{ c.nome }}</strong></td>
-        <td>{{ c.email or '—' }}</td>
-        <td>{{ c.telefone or '—' }}</td>
-        <td class="acoes">
-          <a href="{{ url_for('editar', id=c.id) }}" class="btn btn-editar">✏️ Editar</a>
-          <form method="POST" action="{{ url_for('deletar', id=c.id) }}"
-                onsubmit="return confirm('Remover {{ c.nome }}?')">
-            <button type="submit" class="btn btn-deletar">🗑️ Remover</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <div class="vazio">
-    {% if busca %}
-      <p>Nenhum contato encontrado para "<strong>{{ busca }}</strong>".</p>
-    {% else %}
-      <p>Nenhum contato cadastrado ainda.</p>
-      <a href="{{ url_for('novo') }}" class="btn btn-novo">+ Adicionar primeiro contato</a>
-    {% endif %}
-  </div>
-{% endif %}
+                <div class="botoes">
+                    <a href="#projetos" class="botao">Ver meus projetos</a>
+                    <a href="#contato" class="botao botao-secundario">Entrar em contato</a>
+                </div>
 
-{% endblock %}
+                <div class="tecnologias">
+                    <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                    <span>Python</span><span>SQL</span>
+                </div>
+            </div>
+
+            <div class="avatar">
+                <img src="{{ url_for('static', filename='img/FOTO.jpeg') }}"
+                     alt="Foto de Caio Leonardo" class="avatar-foto">
+                <h3>Caio Leonardo</h3>
+                <p>Estudante de tecnologia</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="secao">
+        <div class="container">
+            <p class="destaque">CONHEÇA MINHA TRAJETÓRIA</p>
+            <h2 class="titulo-secao">Sobre <span>mim</span></h2>
+            <p>
+                Meu nome é Caio Leonardo, estou no 2º ano do ensino médio
+                e faço curso de Tecnologia da Informação no Senac. Durante
+                o curso, venho desenvolvendo conhecimentos em programação,
+                criação de páginas web e bancos de dados.
+            </p>
+            <p>
+                Gosto de trabalhar em equipe, compartilhar ideias e aprender
+                com outras pessoas. Meu objetivo é continuar aprendendo,
+                adquirir novas experiências e criar soluções digitais úteis.
+            </p>
+        </div>
+    </section>
+
+    <section id="habilidades" class="secao fundo">
+        <div class="container">
+            <p class="destaque">O QUE ESTOU APRENDENDO</p>
+            <h2 class="titulo-secao">Minhas <span>habilidades</span></h2>
+
+            <div class="grade-habilidades">
+                <article class="cartao"><div class="icone">HT</div><h3>HTML</h3><p>Estruturação de páginas web.</p></article>
+                <article class="cartao"><div class="icone">CS</div><h3>CSS</h3><p>Estilização de sites.</p></article>
+                <article class="cartao"><div class="icone">JS</div><h3>JavaScript</h3><p>Lógica e interatividade.</p></article>
+                <article class="cartao"><div class="icone">PY</div><h3>Python</h3><p>Programação de aplicações.</p></article>
+                <article class="cartao"><div class="icone">SQL</div><h3>Banco de dados</h3><p>Consultas e organização de dados.</p></article>
+                <article class="cartao"><div class="icone">GH</div><h3>GitHub</h3><p>Compartilhamento de código.</p></article>
+            </div>
+        </div>
+    </section>
+
+    <section id="projetos" class="secao">
+        <div class="container">
+            <p class="destaque">MEUS TRABALHOS</p>
+            <h2 class="titulo-secao">Projetos em <span>destaque</span></h2>
+
+            <div class="grade-projetos">
+                <article class="projeto">
+                    <div class="projeto-imagem educa">01</div>
+                    <div class="projeto-conteudo">
+                        <h3>Educa Mais</h3>
+                        <p>Projeto acadêmico relacionado à educação.</p>
+                        <div class="etiquetas"><span>HTML</span><span>CSS</span><span>Python</span></div>
+                    </div>
+                </article>
+
+                <article class="projeto">
+                    <div class="projeto-imagem tecnologia">02</div>
+                    <div class="projeto-conteudo">
+                        <h3>Educa Tec</h3>
+                        <p>Projeto que relaciona educação e tecnologia.</p>
+                        <div class="etiquetas"><span>HTML</span><span>CSS</span><span>SQL</span></div>
+                    </div>
+                </article>
+
+                <article class="projeto">
+                    <div class="projeto-imagem confeitaria">03</div>
+                    <div class="projeto-conteudo">
+                        <h3>Confeitaria</h3>
+                        <p>Site para apresentar produtos e informações.</p>
+                        <div class="etiquetas"><span>HTML</span><span>CSS</span></div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="contato" class="secao fundo">
+        <div class="container contato">
+            <div>
+                <p class="destaque">VAMOS CONVERSAR</p>
+                <h2 class="titulo-secao">Entre em <span>contato</span></h2>
+                <p>Envie sua mensagem pelo formulário. Ela será salva na caixa de entrada.</p>
+
+                <p class="link-contato">
+                    E-mail:
+                    <a href="mailto:caioleonardo804@gmail.com">caioleonardo804@gmail.com</a>
+                </p>
+
+                <p class="link-contato">
+                    GitHub:
+                    <a href="https://github.com/CaioLeonardo14121" target="_blank" rel="noopener noreferrer">
+                        CaioLeonardo14121
+                    </a>
+                </p>
+            </div>
+
+            <form id="form-contato" action="{{ url_for('enviar_mensagem') }}" method="POST">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required minlength="2" maxlength="100">
+
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required maxlength="254">
+
+                <label for="mensagem">Mensagem</label>
+                <textarea id="mensagem" name="mensagem" rows="5"
+                          required minlength="10" maxlength="5000"></textarea>
+
+                <label class="consentimento">
+                    <input type="checkbox" name="consentimento" required>
+                    Concordo com o uso dos dados para receber esta mensagem.
+                </label>
+
+                <button class="botao" type="submit">Enviar mensagem ↗</button>
+
+                {% with mensagens = get_flashed_messages() %}
+                    {% if mensagens %}
+                        <p class="aviso-form">{{ mensagens[0] }}</p>
+                    {% endif %}
+                {% endwith %}
+
+                <small>As mensagens serão armazenadas no banco de dados do site.</small>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="container rodape">
+        <a href="#inicio" class="logo">CL<span>.</span></a>
+        <p>© <span id="ano"></span> Caio Leonardo. Todos os direitos reservados.</p>
+        <a href="#inicio">Voltar ao topo ↑</a>
+    </div>
+</footer>
+</body>
+</html>
